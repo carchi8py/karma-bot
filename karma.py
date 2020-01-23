@@ -1,7 +1,7 @@
 import slack
 import time
 import logging
-from mytokem import token
+from mytoken import token
 logging.basicConfig()
 slack_client = slack.WebClient(token=token)
 id = None
