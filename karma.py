@@ -9,10 +9,10 @@ from mytoken import token
 from dbsetup import Message, Base
 
 
-def post_message(slack_client, mychannel):
+def post_message(slack_client, mychannel, message):
     slack_client.chat_postMessage(
         channel='#' + mychannel,
-        text="This is a message")
+        text=message)
 
 
 def add_ts_to_db(timestamp):
@@ -36,6 +36,14 @@ def get_latest_ts_from_db():
     return obj
 
 
+def get_channel_id(name):
+    list = slack_client.channels_list()
+    for each in list.data.get('channels'):
+        if each.get('name') == name:
+            return each.get('id')
+    return None
+
+
 # DB Setup variables
 engine = create_engine('sqlite:///db.db')
 Base.metadata.bind = engine
@@ -44,15 +52,12 @@ session = DBSession()
 
 logging.basicConfig()
 slack_client = slack.WebClient(token=token)
-id = None
 mychannel = 'test-channel'
-list = slack_client.channels_list()
-
-for each in list.data.get('channels'):
-    if each.get('name') == mychannel:
-        id = each.get('id')
+id = get_channel_id(mychannel)
+if not id:
+    sys.exit(1)
 while True:
-    post_message(slack_client, mychannel)
+    post_message(slack_client, mychannel, "this is a message")
     if id:
         ts = get_latest_ts_from_db()
         if ts is not None:
