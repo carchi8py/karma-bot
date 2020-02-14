@@ -18,7 +18,7 @@ class KarmaBot(object):
         self.session = DBSession()
 
         logging.basicConfig()
-        self.mychannel = 'test-channel'
+        self.mychannel = 'newtest'
         self.slack_client = slack.WebClient(token=token)
 
     def post_message(self, message):
@@ -85,7 +85,8 @@ class KarmaBot(object):
         while True:
             # Get the latest time stamp from the database so we don't run on the same message
             ts = self.get_latest_ts_from_db()
-            print(ts.timestamp.timestamp())
+            if ts:
+                print(ts.timestamp.timestamp())
             # record the latest message to the database and show the history
             history = self.add_new_ts_to_db(id, ts)
             # If there is a message we want to parse it to see if they want to add or remove karma
