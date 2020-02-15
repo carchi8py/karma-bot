@@ -3,7 +3,6 @@ import time
 import datetime
 import logging
 import sys
-import re
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from mytoken import token
@@ -93,9 +92,6 @@ class KarmaBot(object):
             if history['messages']:
                 for message in history['messages']:
                     self.parse_karma(message)
-
-            print('-----')
-
             time.sleep(2)
 
 def main():
