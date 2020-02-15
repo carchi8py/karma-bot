@@ -6,7 +6,7 @@ import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from mytoken import token
-from dbsetup import Message, Base
+from dbsetup import UserKarma, Message, Base
 
 
 class KarmaBot(object):
@@ -17,7 +17,7 @@ class KarmaBot(object):
         self.session = DBSession()
 
         logging.basicConfig()
-        self.mychannel = 'newtest'
+        self.mychannel = 'test3'
         self.slack_client = slack.WebClient(token=token)
 
     def post_message(self, message):
@@ -38,6 +38,17 @@ class KarmaBot(object):
         new_ts = Message(timestamp=timestamp)
         self.session.add(new_ts)
         self.session.commit()
+
+    def add_karma_to_user(self, username, karma_to_add):
+        if not self.session.query(UserKarma).filter_by(username=username).count():
+            new_user = UserKarma(username=username)
+            self.session.add(new_user)
+            self.session.commit()
+        user_obj = self.session.query(UserKarma).filter_by(username=username).one()
+        user_obj.karma = user_obj.karma + karma_to_add
+        self.session.add(user_obj)
+        self.session.commit()
+        return user_obj
 
     def get_latest_ts_from_db(self):
         """
@@ -70,12 +81,16 @@ class KarmaBot(object):
         message_text = message['text']
         # First check to see if we have a username (this will only work for 1 user in a message)
         if "@" in message_text:
-            username = message_text.split('@')[1]
-            print(username)
-        if "+" in message_text:
-            self.post_message("Plus Karma")
-        if '-' in message_text:
-            self.post_message("Minus Karma")
+            username = message_text.split('@')[1].split('>')[0]
+        else:
+            return
+        plus_karma = message_text.count('+')
+        minus_karma = message_text.count('-')
+        if plus_karma == 0 and minus_karma == 0:
+            return
+        karma_to_add = plus_karma - minus_karma
+        user_obj = self.add_karma_to_user(username, karma_to_add)
+        self.post_message("@" + user_obj.username + " now has " + str(user_obj.karma))
 
     def run(self):
         id = self.get_channel_id()
